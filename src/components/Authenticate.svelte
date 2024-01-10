@@ -1,13 +1,37 @@
 <script>
+  import { auth } from "../lib/firebase/firebase";
+  import { authHandlers } from "../store/store";
+
   let email = "";
   let password = "";
   let confirmPass = "";
   let error = false;
   let register = false;
+  let authenticating = false;
 
-  function handleAuthenticate() {
+  async function handleAuthenticate() {
+    if (authenticating) {
+      return;
+    }
+
     if (!email || !password || (register && !confirmPass)) {
       alert("Please fill out all fields");
+      error = true;
+      return;
+    }
+
+    authenticating = true;
+
+    try {
+      if (!register) {
+        await authHandlers.login(email, password);
+      } else {
+        await authHandlers.signup(email, password, confirmPass);
+      }
+    } catch (err) {
+      console.log("Error", err);
+      error = true;
+      authenticating = false;
     }
   }
 
@@ -19,7 +43,7 @@
 <div class="authContainer">
   <form>
     <h1>{register ? "Register" : "Login"}</h1>
-    {#if register}
+    {#if error}
       <p class="error">The information you have entered is not correct</p>
     {/if}
 
@@ -43,7 +67,14 @@
       </label>
     {/if}
 
-    <button type="button">Submit</button>
+    <button on:click={handleAuthenticate} type="button" class="submitBtn">
+      {#if authenticating}
+        Authenticating...
+        <i class="fas fa-spinner fa-spin spin"></i>
+      {:else}
+        Submit
+      {/if}
+    </button>
   </form>
   <div class="options">
     <p>Or</p>
@@ -123,6 +154,8 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 1.2rem;
+    display: grid;
+    place-items: center;
     display: grid;
     place-items: center;
   }
@@ -213,5 +246,19 @@
 
   .options > div p:last-of-type:hover {
     text-decoration: underline;
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>

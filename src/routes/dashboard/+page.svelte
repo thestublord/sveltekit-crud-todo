@@ -1,7 +1,13 @@
 <script>
+  import { authHandlers, authStore } from "../../store/store";
+
   let todos = [];
   let currTodo = "";
   let error = false;
+
+  authStore.subscribe((curr) => {
+    todos = curr.data.todos;
+  });
 
   function addTodo() {
     error = false;
@@ -39,7 +45,7 @@
         <i class="far fa-save"></i>
         <p>Save</p>
       </button>
-      <button>
+      <button on:click={authHandlers.logout}>
         <i class="far fa-sign-out-alt"></i>
         <p>Logout</p>
       </button>
