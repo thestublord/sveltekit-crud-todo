@@ -80,10 +80,13 @@
       {/each}
     </main>
 
-    <div class={`enterTodo ${error ? "errorBorder" : ""}`}>
+    <form
+      on:submit|preventDefault={addTodo}
+      class={`enterTodo ${error ? "errorBorder" : ""}`}
+    >
       <input bind:value={currTodo} type="text" placeholder="Enter Todo" />
-      <button on:click={addTodo}>Add</button>
-    </div>
+      <button type="submit">Add</button>
+    </form>
   </div>
 {/if}
 
