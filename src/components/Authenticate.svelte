@@ -41,7 +41,7 @@
 </script>
 
 <div class="authContainer">
-  <form on:submit|preventDefault={handleAuthenticate}>
+  <form>
     <h1>{register ? "Register" : "Login"}</h1>
     {#if error}
       <p class="error">The information you have entered is not correct</p>
@@ -67,7 +67,7 @@
       </label>
     {/if}
 
-    <button on:click={handleAuthenticate} type="submit" class="submitBtn">
+    <button on:click={handleAuthenticate} type="button" class="submitBtn">
       {#if authenticating}
         Authenticating...
         <i class="fas fa-spinner fa-spin spin"></i>
