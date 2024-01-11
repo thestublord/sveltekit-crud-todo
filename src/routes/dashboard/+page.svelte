@@ -1,12 +1,15 @@
 <script>
+  import TodoItem from "../../components/TodoItem.svelte";
+  import { db } from "../../lib/firebase/firebase";
   import { authHandlers, authStore } from "../../store/store";
+  import { getDoc, doc, setDoc } from "firebase/firestore";
 
-  let todos = [];
+  let todoList = [];
   let currTodo = "";
   let error = false;
 
   authStore.subscribe((curr) => {
-    todos = curr.data.todos;
+    todoList = curr.data.todos;
   });
 
   function addTodo() {
@@ -15,69 +18,74 @@
       error = true;
     }
 
-    todos = [...todos, currTodo];
+    todoList = [...todoList, currTodo];
     currTodo = "";
   }
 
   function editTodo(index) {
-    let newTodoList = [...todos].filter((val, i) => {
+    let newTodoList = [...todoList].filter((val, i) => {
       console.log(i, index, i !== index);
       return i != index;
     });
-    currTodo = todos[index];
-    todos = newTodoList;
+    currTodo = todoList[index];
+    todoList = newTodoList;
   }
 
   function removeTodo(index) {
-    let newTodoList = [...todos].filter((val, i) => {
+    let newTodoList = [...todoList].filter((val, i) => {
       console.log(i, index, i !== index);
       return i != index;
     });
-    todos = newTodoList;
+    todoList = newTodoList;
+  }
+
+  async function saveTodos() {
+    try {
+      const userRef = doc(db, "users", $authStore.user.uid);
+      await setDoc(
+        userRef,
+        {
+          todos: todoList,
+        },
+        { merge: true },
+      );
+    } catch (err) {
+      console.log("there was an error saving todos");
+    }
   }
 </script>
 
-<div class="mainContainer">
-  <div class="headerContainer">
-    <h1>Todo List</h1>
-    <div class="headerBtns">
-      <button>
-        <i class="far fa-save"></i>
-        <p>Save</p>
-      </button>
-      <button on:click={authHandlers.logout}>
-        <i class="far fa-sign-out-alt"></i>
-        <p>Logout</p>
-      </button>
+{#if !$authStore.loading}
+  <div class="mainContainer">
+    <div class="headerContainer">
+      <h1>Todo List</h1>
+      <div class="headerBtns">
+        <button on:click={saveTodos}>
+          <i class="far fa-save"></i>
+          <p>Save</p>
+        </button>
+        <button on:click={authHandlers.logout}>
+          <i class="far fa-sign-out-alt"></i>
+          <p>Logout</p>
+        </button>
+      </div>
+    </div>
+
+    <main>
+      {#if todoList.length === 0}
+        <p class="center">No Todos</p>
+      {/if}
+      {#each todoList as todo, index}
+        <TodoItem {todo} {index} {editTodo} {removeTodo} />
+      {/each}
+    </main>
+
+    <div class={`enterTodo ${error ? "errorBorder" : ""}`}>
+      <input bind:value={currTodo} type="text" placeholder="Enter Todo" />
+      <button on:click={addTodo}>Add</button>
     </div>
   </div>
-
-  <main>
-    {#if todos.length === 0}
-      <p class="center">No Todos</p>
-    {/if}
-    {#each todos as todo, index}
-      <div class="todo">
-        <p>
-          {index + 1}. {todo}
-        </p>
-        <div class="actions">
-          <button>
-            <i class="far fa-edit" on:click={() => editTodo(index)}></i>
-          </button>
-          <button>
-            <i class="far fa-trash-alt" on:click={() => removeTodo(index)}></i>
-          </button>
-        </div>
-      </div>
-    {/each}
-  </main>
-
-  <div class={`enterTodo ${error ? "errorBorder" : ""}`}>
-    <input bind:value={currTodo} type="text" placeholder="Enter Todo" />
-    <button on:click={addTodo}>Add</button>
-  </div>
-</div>
+{/if}
 
 <style>
   .mainContainer {
@@ -132,40 +140,6 @@
     flex-direction: column;
     gap: 24px;
     margin-top: 24px;
-  }
-
-  .todo {
-    padding: 8px;
-
-    border-radius: 4px;
-    background: transparent;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .actions {
-    display: flex;
-    gap: 4px;
-    font-size: 1.2rem;
-    margin-left: auto;
-  }
-
-  .actions button:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .actions button {
-    padding: 8px;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    gap: 8px;
-    align-items: center;
   }
 
   .enterTodo {

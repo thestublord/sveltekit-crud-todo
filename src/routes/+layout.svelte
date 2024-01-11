@@ -27,14 +27,17 @@
       let dataToSetToStore;
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      if (!docSnap.exists()) {
+        console.log("creating new user");
+        const userRef = doc(db, "users", user.uid);
         dataToSetToStore = {
           email: user.email,
-          uid: user.uid,
+
           todos: [],
         };
         await setDoc(docRef, dataToSetToStore, { merge: true });
       } else {
+        console.log("user exists");
         const userData = docSnap.data();
         dataToSetToStore = userData;
       }
